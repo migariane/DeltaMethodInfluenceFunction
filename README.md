@@ -1,7 +1,7 @@
 ## The Delta-method and influence function in epidemiology: areproducible tutorial
 
 ### Authors
-Rodrigo Zepeda-Tello 1,2| Michael Schomaker 3,4| Aurelien Belot 5| Bernard Rachet 5| Mireille E.Schnitzer 6,7| Miguel Angel Luque Fernandez*5,8,91
+Rodrigo Zepeda-Tello 1,2| Michael Schomaker 3,4| Aurelien Belot 5| Bernard Rachet 5| Mireille E.Schnitzer 6,7| Miguel Angel Luque Fernandez*5,8,9
 
 ### Affiliations 
 1. Instituto Tecnologico Autonomo de Mexico, Mexico.
