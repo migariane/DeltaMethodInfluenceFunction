@@ -1,23 +1,41 @@
 ---
-title: ""
-author: ""
-date: ""
-output: pdf_document
+title: "Code boxes for Delta Method Tutorial"
+author: ''
+date: ''
+output:
+  pdf_document: 
+    extra_dependencies: 
+      caption: ["labelfont={bf}"]
+      geometry: ["margin=1in"]
+      resizegather: null
+      amsmath: null
+      amssymb: null
+  html_document:
+    df_print: paged
+urlcolor: blue  
 ---
+
+**This tutorial requires an R version >= 4.1.0 and Python version >= 3.5**
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-Sys.setenv(RETICULATE_PYTHON = "/usr/local/Caskroom/miniconda/base/envs/DELTAMETHOD_MIGUEL/bin/python")
 ```
 
 The following code will be used throughout the complete tutorial
 
-```{r, message = FALSE}
-#Estimation of the derivative of Relative Risk
-library(caracas)
+```{r, message = FALSE, warning = FALSE}
+#This should point to **your** Python path as explained in last section
+Sys.setenv(RETICULATE_PYTHON = "/usr/local/Caskroom/miniconda/base/envs/DeltaMethod/bin/python")
 
-#Parser for Sympy (you need sympy version 1.10)
+library(caracas)
+library(MASS)
+
+#Parser for Sympy (you need sympy version 1.10 or 1.9 development)
 #check sympy_version() to see you have the right one
+sympy_version()
+
+#Create parsers to find the functions check sympy's documentation
+#and substitute dots for $ in https://docs.sympy.org/latest/index.html
 sympy            <- get_sympy()
 Parse            <- sympy$parsing$sympy_parser$parse_expr
 RandomSymbol     <- sympy$stats$rv$RandomSymbol
@@ -27,6 +45,144 @@ Symbol           <- sympy$Symbol
 Lambdify         <- sympy$utilities$lambdify
 Simplify         <- sympy$simplify
 Derivative       <- sympy$derive_by_array
+Taylor           <- sympy$series
+LaTeX            <- sympy$latex
+Function         <- sympy$Function
+```
+
+# Mean (classical)
+
+```{r}
+#Declaration of constants (Symbol) and random variables (RandomSymbol)
+mu     <- Symbol('mu')
+sigma     <- Symbol('sigma', positive = TRUE) #Variance of x
+n      <- Symbol('n', positive = TRUE, integer = TRUE)
+xbar   <- RandomSymbol('xbar')
+
+#List variables for parse
+variable_list <- list('mu' = mu, 'xbar' = xbar)
+
+#We are working with the variance of the ratio
+phi           <- Parse("mu", local_dict = variable_list)
+
+#Obtain the gradient of log RR
+phi_prime     <- Derivative(phi,  list(mu))
+variable_list <- append(variable_list, list("phi_prime" = phi_prime))
+
+#Direction vector (horizontal vector)
+v <- Parse("xbar - mu", local_dict = variable_list)
+
+#Get hadamard (directional) derivative
+hadamard <- v #phi_prime = 1 so it doesn't change the result
+
+#Variance
+var_phi <- Variance(hadamard)$expand() |> Simplify()
+
+#Recall the covariance is 0 due to independence
+var_phi <- var_phi$subs(Variance(xbar), "sigma**2/n")
+
+print(var_phi)
+```
+
+# Ratio of two means
+
+To estimate the ratio of two means we need to define it as a function of symbols
+
+```{r}
+mu_x     <- Symbol('mu_x')
+mu_y     <- Symbol('mu_y')
+n        <- Symbol('n', positive=T) #Sample size of x
+sigma_x     <- Symbol('sigma_x', positive = T) #Standard deviation of x
+sigma_y     <- Symbol('sigma_y', positive = T) #Standard deviation of y
+sigma_xy    <- Symbol('sigma_xy') #Covariance
+xbar     <- RandomSymbol('xbar')
+ybar     <- RandomSymbol('ybar')  
+
+#List variables for parse
+variable_list <- list('mu_x' = mu_x, 'mu_y' = mu_y, 'xbar' = xbar,
+                      'ybar' = ybar, 'n'  = n, 'sigma_xy' = sigma_xy,
+                      'sigma_x' = sigma_x, 'sigma_y' = sigma_y)
+
+#We are working with the variance of the ratio
+mean_ratio    <- Parse("mu_x/mu_y", local_dict = variable_list)
+```
+
+We then obtain the derivative:
+```{r}
+#Obtain the gradient of log RR
+g_mean        <- Derivative(mean_ratio,  list(mu_x, mu_y))
+
+#Update variable list
+variable_list <- append(variable_list, list("g_mean" = g_mean))
+g_mean        <- Parse("Matrix(g_mean)", local_dict = variable_list)
+
+#Direction vector (horizontal vector)
+v <- Parse("Matrix([xbar - mu_x, ybar - mu_y])", local_dict = variable_list)
+
+#Compute inner (dot) product
+hadamard <- g_mean$dot(v)
+print(hadamard)
+```
+
+The variance of that gradient is given as follows:
+```{r}
+#Get the variance of gradient
+var_mean_ratio <- Variance(hadamard)$expand() |> Simplify()
+print(var_mean_ratio)
+```
+
+Recall that $\bar{X}$ and $\bar{Y}$ are random variables with the following variances:
+$$
+\textrm{Var}\big[\bar{X}\big] = \frac{\sigma^2_X}{n}, \qquad \text{and}\qquad \textrm{Var}\big[\bar{Y}\big] = \frac{\sigma^2_Y}{n}.
+$$
+which are specified as follows:
+
+```{r}
+#To establish a power (say x^2) use ** function instead of ^
+var_xbar      <- Parse("sigma_x**2/n", local_dict = variable_list)
+var_ybar      <- Parse("sigma_y**2/n", local_dict = variable_list)
+cov_xbar_ybar <- Parse("sigma_xy/n", local_dict = variable_list)
+```
+
+Further simplifications are allowed that result in a cleaner expression: 
+
+```{r}
+#Recall the covariance is 0 due to independence
+var_mean_ratio <- var_mean_ratio$subs(Covariance(xbar, ybar), cov_xbar_ybar)
+
+#Assign the variances of p1_hat and p2_hat
+var_mean_ratio <- var_mean_ratio$subs(Variance(xbar), var_xbar)
+var_mean_ratio <- var_mean_ratio$subs(Variance(ybar), var_ybar)
+
+#This is the final expression for the variance
+var_mean_ratio <- var_mean_ratio |> Simplify()
+print(var_mean_ratio)
+```
+We transform the expression into an R function:
+```{r}
+#Transform the symbolic algebra into an R function
+variable_list     <- append(variable_list, 
+                            list("var_mean_ratio" = var_mean_ratio))
+var_mean <- Parse("lambdify((mu_x, mu_y, sigma_x, sigma_xy, sigma_y, n), var_mean_ratio)", 
+                           local_dict = variable_list)
+```
+
+The function can be evaluated for different values:
+```{r}
+#You can use the variance function to estimate the IF with data
+sample           <- mvrnorm(10, c(3,4), matrix(c(1,0.3,0.3,2), ncol = 2))
+colnames(sample) <- c("X","Y")
+
+#We obtain the sample means and variances
+xbar   <- sample[,"X"] |> mean()
+ybar   <- sample[,"Y"] |> mean()
+
+sigma_x   <- sample[,"X"] |> sd()
+sigma_y   <- sample[,"Y"] |> sd()
+sigma_x_y <- cov(sample[,"X"], sample[,"Y"])
+
+var_mean(mu_x = xbar, mu_y = ybar, sigma_x = sigma_x, 
+         sigma_xy = sigma_x_y, sigma_y = sigma_y, n = 10)
 ```
 
 # Relative Risk
@@ -35,11 +191,11 @@ To estimate the relative risk we need to define it as a function of symbols
 ```{r}
 #In "Sympy" you need to declare variables for algebra as symbols
 #and random variables as random symbols
-p1     <- Symbol('p1', positive=T);
-p2     <- Symbol('p2', positive=T);
+p1     <- Symbol('p1', positive=T)
+p2     <- Symbol('p2', positive=T)
 N      <- Symbol('N', positive=T, integer=T) #Sample size
-p1_hat <- RandomSymbol('p1_hat');
-p2_hat <- RandomSymbol('p2_hat');  
+p1_hat <- RandomSymbol('p1_hat')
+p2_hat <- RandomSymbol('p2_hat')  
 
 #List variables for parse
 variable_list <- list('p1' = p1, 'p2' = p2, 'p1_hat' = p1_hat,
@@ -71,8 +227,11 @@ log_RR        <- Parse("log(p1/p2)", local_dict = variable_list)
 #Obtain the gradient of log RR
 g_RR          <- Derivative(log_RR,  list(p1, p2))
 
+#Uodate variable list with the derivative
 variable_list <- append(variable_list, list("g_RR" = g_RR))
-g_RR          <- Parse("Matrix(g_RR)", local_dict = list("g_RR" = g_RR))
+
+#Convert to matrix as it is a list
+g_RR          <- Parse("Matrix(g_RR)", local_dict = variable_list)
 
 #Direction vector (horizontal vector)
 v <- Parse("Matrix([p1_hat - p1, p2_hat - p2])", local_dict = variable_list)
@@ -119,3 +278,362 @@ variance_function(p1 = 0.7, p2 = 0.4, N = 100)
 variance_function(p1 = 0.3, p2 = 0.5, N = 500)
 variance_function(p1 = 0.1, p2 = 0.1, N = 2)
 ```
+
+# Counter Example: Attributable Risk
+
+For the counterexample of the function where the Taylor series is zero given by
+$$
+AF = \begin{cases}
+\frac{e^{\theta/x} - 1}{e^{\theta/x}} & \text{ if } x \neq 0,\\
+1 & \text{ if } x = 0.
+\end{cases}
+$$
+
+```{r}
+#Get the variables
+x      <- Symbol('x', positive=T)
+
+#Tenth order Taylor
+Taylor("(exp(1/x) - 1)/exp(1/x)", x0 = 0, n = 10)$removeO()
+```
+
+# Higher Order Delta Method
+
+Estimate the Taylor series for $p(1-p)$:
+
+```{r}
+#Get the variables
+p      <- Symbol('p', positive=T)
+
+#3rd order Taylor
+Taylor("p*(1-p)", x0 = 1/2, n = 3)$removeO()
+```
+
+# Correlation parameters
+
+```{r}
+mu_uv    <- Symbol('mu_uv')
+mu_u     <- Symbol('mu_u')
+mu_v     <- Symbol('mu_v')
+mu_u2    <- Symbol('mu_u2', positive=T)
+mu_v2    <- Symbol('mu_v2', positive=T)
+N        <- Symbol('N', positive=T, integer=T) #Sample size
+uvbar    <- RandomSymbol("uvbar")
+ubar     <- RandomSymbol("ubar")
+vbar     <- RandomSymbol("vbar")
+ubar2    <- RandomSymbol("ubar2")
+vbar2    <- RandomSymbol("vbar2")
+
+#List variables for parse
+variable_list <- list('mu_uv' = mu_uv, 'mu_u' = mu_u, 'mu_v' = mu_v,
+                      'mu_u2' = mu_u2, 'mu_v2'  = mu_v2, 'N' = N,
+                      'uvbar' = uvbar, 'ubar' = ubar, 'vbar' = vbar,
+                      'ubar2' = ubar2, 'vbar2' = vbar2)
+
+#We are working with the variance of the covariance
+exp <- "(mu_uv - mu_u*mu_v)/(sqrt(mu_u2 - mu_u**2)*sqrt(mu_v2 - mu_v**2))"
+cov_function    <- Parse(exp, local_dict = variable_list)
+
+#Gradient
+#Obtain the gradient of log RR
+g_cov <- Derivative(cov_function,  list(mu_uv, mu_u, mu_v, mu_u2, mu_v2))
+g_cov <- Simplify(g_cov)
+
+print(g_cov)
+```
+
+You can print the code in LaTeX as follows:
+```{r, eval = FALSE}
+LaTeX(g_cov)
+```
+
+```{r, eval = TRUE, echo = FALSE, results='asis'}
+paste0("\\begin{gather*}\n",LaTeX(g_cov),"\n\\end{gather*}") |> cat()
+```
+
+```{r, results = 'hide'}
+#Convert to matrix as it is a list
+variable_list  <- append(variable_list, list("g_cov" = g_cov))
+g_cov          <- Parse("Matrix(g_cov)", local_dict = variable_list)
+
+#Direction vector (horizontal vector)
+v <- Parse("Matrix([uvbar - mu_uv, ubar - mu_u, vbar - mu_v,
+           ubar2 - mu_u2, vbar2 - mu_v2])", local_dict = variable_list)
+
+#Compute inner product
+hadamard <- g_cov$dot(v) 
+
+```
+
+```{r, echo=FALSE, results = 'asis'}
+paste0("\\begin{gather*}\n",
+       LaTeX(hadamard),"\n\\end{gather*}") |> cat()
+```
+
+```{r}
+#Get the variance of gradient
+var_cov <- Variance(hadamard)$expand() 
+
+#Simplification process takes minutes be patient!
+var_cov <- Simplify(var_cov)
+
+#Further simplification required to delete the Cov(1,1)
+var_cov <- Simplify(var_cov)
+
+print(var_cov)
+```
+
+We then create all the variances we are going to substitute:
+```{r}
+sigma_uv    <- Symbol('sigma_uv',  positive = T)
+sigma_u     <- Symbol('sigma_u',   positive = T)
+sigma_v     <- Symbol('sigma_v',   positive = T)
+sigma_u2    <- Symbol('sigma_u2',  positive = T)
+sigma_v2    <- Symbol('sigma_v2',  positive = T)
+cov_u_v     <- Symbol('cov_u_v',   positive = T)
+cov_uv_v    <- Symbol('cov_uv_v',  positive = T)
+cov_uv_u    <- Symbol('cov_uv_u',  positive = T)
+cov_v_v2    <- Symbol('cov_v_v2',  positive = T)
+cov_u_u2    <- Symbol('cov_u_u2',  positive = T)
+cov_uv_u2   <- Symbol('cov_uv_u2',  positive = T)
+cov_uv_v2   <- Symbol('cov_uv_v2',  positive = T)
+cov_u2_v2   <- Symbol('cov_u2_v2', positive = T)
+cov_u2_v    <- Symbol('cov_u2_v',  positive = T)
+cov_v2_u    <- Symbol('cov_v2_u',  positive = T)
+
+#We then substitute the variances
+variable_list <- append(variable_list, 
+                        list("sigma_u"   = sigma_u,  "sigma_uv" = sigma_uv,
+                             "sigma_v"   = sigma_v,  "sigma_u2" = sigma_u2,
+                             "sigma_v2"  = sigma_v2, "cov_u_v" = cov_u_v,
+                             "cov_v_v2"  = cov_v_v2, "cov_uv_v" = cov_uv_v,
+                             "cov_uv_u"  = cov_uv_u, "cov_uv_u2" = cov_uv_u2,
+                             "cov_uv_v2" = cov_uv_v2,
+                             "cov_u_u2"  = cov_u_u2, "cov_u2_v2" = cov_u2_v2,
+                             "cov_u2_v"  = cov_u2_v, "cov_v2_u" = cov_v2_u))
+
+var_ubar     <- Parse("sigma_u**2/N",  local_dict = variable_list)
+var_vbar     <- Parse("sigma_v**2/N",  local_dict = variable_list)
+var_uvbar    <- Parse("sigma_uv**2/N", local_dict = variable_list)
+var_u2bar    <- Parse("sigma_u2**2/N", local_dict = variable_list)
+var_v2bar    <- Parse("sigma_u2**2/N", local_dict = variable_list)
+covar_u_v    <- Parse("cov_u_v/N", local_dict = variable_list)
+covar_u_u2   <- Parse("cov_u_u2/N", local_dict = variable_list)
+covar_v_v2   <- Parse("cov_v_v2/N", local_dict = variable_list)
+covar_u2_v   <- Parse("cov_u2_v/N", local_dict = variable_list)
+covar_v2_u   <- Parse("cov_v2_u/N", local_dict = variable_list)
+covar_u2_v2  <- Parse("cov_u2_v2/N", local_dict = variable_list)
+covar_uv_u   <- Parse("cov_uv_u/N", local_dict = variable_list)
+covar_uv_v   <- Parse("cov_uv_v/N", local_dict = variable_list)
+covar_uv_u2  <- Parse("cov_uv_u2/N", local_dict = variable_list)
+covar_uv_v2  <- Parse("cov_uv_v2/N", local_dict = variable_list)
+
+var_cov <- var_cov$subs(Variance(ubar),  var_ubar)
+var_cov <- var_cov$subs(Variance(vbar),  var_vbar)
+var_cov <- var_cov$subs(Variance(uvbar), var_uvbar)
+var_cov <- var_cov$subs(Variance(ubar2), var_u2bar)
+var_cov <- var_cov$subs(Variance(vbar2), var_v2bar)
+var_cov <- var_cov$subs(Covariance(ubar, vbar),   covar_u_v)
+var_cov <- var_cov$subs(Covariance(ubar, ubar2),  covar_u_u2)
+var_cov <- var_cov$subs(Covariance(vbar, vbar2),  covar_v_v2)
+var_cov <- var_cov$subs(Covariance(ubar2, vbar),  covar_u2_v)
+var_cov <- var_cov$subs(Covariance(vbar2, ubar),  covar_v2_u)
+var_cov <- var_cov$subs(Covariance(ubar2, vbar2), covar_u2_v2)
+var_cov <- var_cov$subs(Covariance(uvbar, ubar),  covar_uv_u)
+var_cov <- var_cov$subs(Covariance(uvbar, vbar),  covar_uv_v)
+var_cov <- var_cov$subs(Covariance(uvbar, vbar2), covar_uv_v2)
+var_cov <- var_cov$subs(Covariance(uvbar, ubar2), covar_uv_u2)
+
+#Further simplification
+var_cov <- Simplify(var_cov)
+
+```
+
+```{r}
+#Transform the symbolic algebra into an R function
+variable_list     <- append(variable_list, list("var_cov" = var_cov))
+
+exp <- paste0("lambdify((mu_u, mu_v, mu_uv, mu_u2, mu_v2, sigma_u, sigma_v, sigma_uv,",
+              "sigma_u2, sigma_v2, cov_u_v, cov_uv_u, cov_uv_v, cov_v_v2,", 
+              "cov_u_u2, cov_uv_u2,",
+              "cov_uv_v2, cov_u2_v2, cov_u2_v, cov_v2_u, N","), var_cov)")
+var_cov <- Parse(exp, local_dict = variable_list)
+
+#You can check the variance function works as intended:
+samples <- 1000
+rho     <- 0.83
+data    <- mvrnorm(n=samples, mu=c(0, 0), Sigma=matrix(c(1, rho, rho, 1), nrow=2))
+colnames(data) <- c("U","V")
+rho_hat <- cov(data[,"U"], data[,"V"])
+
+variance_rho <- var_cov(
+  mu_u     = mean(data[,"U"]), 
+  mu_v     = mean(data[,"V"]), 
+  mu_uv    = mean(data[,"U"]*data[,"V"]), 
+  mu_u2    = mean(data[,"U"]^2), 
+  mu_v2    = mean(data[,"V"]^2), 
+  sigma_u  = sd(data[,"U"]),
+  sigma_v  = sd(data[,"V"]),
+  sigma_uv = sd(data[,"U"]*data[,"V"]),
+  sigma_u2 = sd(data[,"U"]^2),
+  sigma_v2 = sd(data[,"V"]^2),
+  cov_u_v  = cov(data[,"U"],data[,"V"]),
+  cov_uv_u = cov(data[,"U"]*data[,"V"],data[,"U"]),
+  cov_uv_v = cov(data[,"U"]*data[,"V"],data[,"V"]),
+  cov_v_v2 = cov(data[,"V"],data[,"V"]^2),
+  cov_u_u2 = cov(data[,"U"],data[,"U"]^2),
+  cov_uv_u2 = cov(data[,"U"]*data[,"V"],data[,"U"]^2),
+  cov_uv_v2 = cov(data[,"U"]*data[,"V"],data[,"V"]^2),
+  cov_u2_v = cov(data[,"U"]^2,data[,"V"]),
+  cov_v2_u = cov(data[,"V"]^2,data[,"U"]),
+  cov_u2_v2 = cov(data[,"U"]^2,data[,"V"]^2),
+  N = samples
+)
+
+#Confidence interval
+rho_hat + qnorm(1 - 0.975/2)*sqrt(variance_rho)
+rho_hat - qnorm(1 - 0.975/2)*sqrt(variance_rho)
+
+```
+
+# Summary (steps)
+
+We can summarize the previous results in the following steps. Note that the code will not work as no function `f` is specified:
+
+  1. Instantiate the estimator $\hat{\theta}$ of $\theta$ as random variable and $\theta$ as constant.
+  
+```{r}
+theta         <- Symbol('theta')
+theta_hat     <- RandomSymbol('theta_hat')
+
+variable_list <- list("theta" = theta, "theta_hat" = theta_hat)
+```
+
+  2. Create the function $\phi$ whose variance is to be estimated. In this example it is $\theta^2$. 
+
+```{r}
+#This is usually done with Parse if we know the function
+phi           <- Parse("theta**2", local_dict = variable_list)
+variable_list <- append(variable_list, list("phi" = phi))
+```
+
+  3. Obtain $\phi$'s derivative
+  
+```{r}
+phi_prime     <- Derivative(phi, list(theta))
+variable_list <- append(variable_list, list("phi_prime" = phi_prime))
+phi_prime     <- Parse("Matrix(phi_prime)", local_dict = variable_list)
+```  
+
+  4. Obtain the direction vector $v$
+  
+```{r}
+v <- Parse("Matrix([theta_hat - theta])", local_dict = variable_list)
+```    
+  
+  5. Get the dot product:
+
+```{r}
+hadamard <- phi_prime$dot(v)
+```      
+
+  6. Calculate the variance
+
+```{r}
+#Get the variance of gradient
+variance_f <- Variance(hadamard)$expand() |> Simplify()
+```
+
+  7. Replace the variance of the estimator by the new variable
+```{r}
+sigma_thetahat <- Parse("sigma_thetahat**2",  local_dict = variable_list)
+variance_f     <- variance_f$subs(Variance(theta_hat), sigma_thetahat)
+```
+
+  7. Conver to `R` function
+```{r}
+variable_list     <- append(variable_list, list("variance_f" = variance_f))
+variance_function <- Parse("lambdify((theta,sigma_thetahat), variance_f)", 
+                           local_dict = variable_list)
+```
+
+  8. Enjoy!
+```{r}
+variance_function(theta = 3, sigma_thetahat = 0.01)
+```
+  
+
+# Installation
+
+## Installing `R`
+
+Go to [https://cran.r-project.org/](https://cran.r-project.org/) and choose your operating system.
+
+  + If using `Windows` select this option, then choose `base` and download the `exe` file. 
+  + If using `Mac` select this option, then choose the option based on your processor (Intel or ARM). To see what processor you have go to `About this Mac` and check the **processor**. 
+  + If using `Linux` the suggested way is to download the binaries from `CRAN` as the ones you get from the package managers (`apt`, `yum`, etc) are usually old. 
+
+### Suggestion `RStudio`
+
+`RStudio` is an integrated development environment for `R` (_i.e._ its an editor that allows you to work better on your scripts). It needs to be installed separately from `R` (you need both installations). To install go to [https://www.rstudio.com/products/rstudio/download/](https://www.rstudio.com/products/rstudio/download/) and choose the `Free` Desktop version. 
+
+## Installing `R` packages
+
+Open `R` (or `RStudio`) if installed and write `install.packages(c("reticulate","caracas"))` on the console and wait for installation. 
+
+## Installing Python
+
+Python already comes installed with your operating system; however we suggest an additional (separate) installation using `Anaconda`. To install go to [https://www.anaconda.com/products/individual](https://www.anaconda.com/products/individual). Anaconda comes bundled with a bunch of data science tools that are not required for this tutorial: if you'd prefer a meager installation you can install Miniconda [https://docs.conda.io/en/latest/miniconda.html](https://docs.conda.io/en/latest/miniconda.html). For both installations the process that follows is the same. We'll refer to both as `conda`. 
+
+Please make sure you are installing a `conda` version corresponding to Python >= 3.5 (_i.e._ any Python version greater than 3.5 like 3.6, 3.7 are great for this.)
+
+## Creating a conda environment
+
+Once `conda` is installed open Anaconda Prompt (Windows) or Terminal (Mac). Write:
+
+```{bash, eval = FALSE}
+conda create -y --name DeltaMethod python=3.9 
+```
+
+to create a new environment called `DeltaMethod`. Write 
+
+```{bash, eval = FALSE}
+conda env list
+```
+
+to get the path to your environment. For example my path is `/usr/local/Caskroom/miniconda/base/envs/DeltaMethod`. 
+
+We'll use this environment in the `R` code. Before loading library `caracas`, at the beginning of the code, write:
+```{r, eval = FALSE}
+Sys.setenv(RETICULATE_PYTHON = "path/to/your/environment/bin/python")
+```
+
+for example, in my computer it ends up like this:
+
+```{r}
+Sys.setenv(RETICULATE_PYTHON = "/usr/local/Caskroom/miniconda/base/envs/DeltaMethod/bin/python")
+```
+
+to verify that the environment is set check its in `python` and `libpython`:
+
+```{r}
+reticulate::py_config()
+```
+
+### Installing Sympy
+
+To install Sympy ensure you are using a version `>= 1.9`. Go to `Anaconda Prompt` (`Terminal`) and activate the environment:
+
+```{bash, eval = FALSE}
+conda activate DeltaMethod
+```
+
+Finally, install `sympy` and `numpy` in the environment
+
+```{bash, eval = FALSE}
+conda install -y -c conda-forge sympy">=1.9" numpy
+```
+
+**Warning** If `R` or `RStudio` was already open before completing installation you'll need to restart them. 
+
+
