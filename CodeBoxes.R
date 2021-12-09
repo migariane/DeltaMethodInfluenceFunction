@@ -36,7 +36,45 @@ DeltaMethod(lm(y ~ 1), "b0")
 #       Estimate SE           2.5%   97.5%
 #    b0 0.508518 0.009161893 0.490561 0.526475
 
-## BOX TWO
+## BOX TWO: ratio two means
+set.seed(123)
+sample           <- as.data.frame(mvrnorm(1000, c(3,4), matrix(c(1,0.3,0.3,2), ncol = 2)))
+colnames(sample) <- c("X","Y")
+sample <- as.data.frame(sample)
+attach(sample)
+ratio <- X/Y;mean(ratio)
+n <- 1000
+a <-    (1 / (mean(Y))^2) * var(X) 
+b <-   ((mean(X))^2 / (mean(Y))^4) * var(Y) 
+c <-    2 * ((mean(X)) / (mean(Y))^3) * cov(X,Y)
+var.IF <- 1/n *(a+b-c); var.IF
+SE <- sqrt(var.IF); SE
+CI = c(mean(ratio)-1.96*SE,mean(ratio)+1.96*SE); mean(ratio); CI
+
+## BOX THREE
+install.packages("epitools")
+library(epitools)
+RRtable <- matrix(c(60,40,40,60),nrow = 2, ncol = 2)
+RRtable
+# The next line asks R to compute the RR and 95% confidence interval
+riskratio.wald(RRtable)
+p1 <- 0.6
+p2 <- 0.4
+N1 <- 100
+N2 <- 100
+ratio <- 0.6 / 0.4; ratio
+var.IF <- (1 / (p1)^2 * (p1 * (1 - p1)/ N1)) + (1 / (p2)^2 * (p2 * (1 - p2)/ N2));var.IF
+SE <- sqrt(var.IF); SE
+CI = c(log(ratio)-1.96*SE,log(ratio)+1.96*SE); ratio; exp(CI)
+
+## BOX FOUR
+#Get the variables
+x      <- Symbol('x', positive=T)
+#Tenth order Taylor
+Taylor("(exp(1/x) - 1)/exp(1/x)", x0 = 0, n = 10)$removeO()
+
+
+## BOX FIVE
 # Delta-method for the SE of the correlation between two vectors U and V based on the IF.
 #install.packages("psychometric")
 #install.packages("MASS")
@@ -82,7 +120,7 @@ CI = c(rho_hat-1.96*SE,rho_hat+1.96*SE); CI
 CIr(rho_hat,1000,.95)
 ## [1] 0.8096 0.8483
 
-## BOX THREE: Data generation (simulated example) to apply the Delta-method in a multiple regression 
+## BOX SIX: Data generation (simulated example) to apply the Delta-method in a multiple regression 
 # Data generation
 set.seed(05061972)
 N <- 1000
@@ -109,7 +147,7 @@ exp(coefficients(glm(death ~ treat + age + SES + morbidity + stage,family=poisso
 mean(death.1-death.0)
 ## -0.124
 
-## BOX FOUR
+## BOX SEVEN
 # Delta method to derive the SE for the conditional RR
 data  <- as.data.frame(cbind(death , treat , age , SES , morbidity , stage))
 m1 <- glm(death ~ age + treat, family = binomial, data = data)
