@@ -3,6 +3,8 @@ title: "Code boxes for Delta Method Tutorial"
 author: ''
 date: ''
 output:
+  html_document:
+    df_print: paged
   pdf_document: 
     extra_dependencies: 
       caption: ["labelfont={bf}"]
@@ -10,8 +12,6 @@ output:
       resizegather: null
       amsmath: null
       amssymb: null
-  html_document:
-    df_print: paged
 urlcolor: blue  
 ---
 
@@ -25,9 +25,10 @@ The following code will be used throughout the complete tutorial
 
 ```{r, message = FALSE, warning = FALSE}
 #This should point to **your** Python path as explained in last section
-Sys.setenv(RETICULATE_PYTHON = "/usr/local/Caskroom/miniconda/base/envs/DeltaMethod/bin/python")
-
+Sys.setenv(RETICULATE_PYTHON = #"/usr/local/Caskroom/miniconda/base/envs/DeltaMethod/bin/python")
+"/Users/MALF/opt/miniconda3/envs/DeltaMethod/bin/python")
 library(caracas)
+library(reticulate)
 library(MASS)
 
 #Parser for Sympy (you need sympy version 1.10 or 1.9 development)
@@ -76,7 +77,7 @@ v <- Parse("xbar - mu", local_dict = variable_list)
 hadamard <- v #phi_prime = 1 so it doesn't change the result
 
 #Variance
-var_phi <- Variance(hadamard)$expand() |> Simplify()
+var_phi = Variance(hadamard)$expand() |> Simplify()
 
 #Recall the covariance is 0 due to independence
 var_phi <- var_phi$subs(Variance(xbar), "sigma**2/n")
@@ -170,7 +171,8 @@ var_mean <- Parse("lambdify((mu_x, mu_y, sigma_x, sigma_xy, sigma_y, n), var_mea
 The function can be evaluated for different values:
 ```{r}
 #You can use the variance function to estimate the IF with data
-sample           <- mvrnorm(10, c(3,4), matrix(c(1,0.3,0.3,2), ncol = 2))
+set.seed(123)
+sample           <- mvrnorm(1000, c(3,4), matrix(c(1,0.3,0.3,2), ncol = 2))
 colnames(sample) <- c("X","Y")
 
 #We obtain the sample means and variances
@@ -182,7 +184,7 @@ sigma_y   <- sample[,"Y"] |> sd()
 sigma_x_y <- cov(sample[,"X"], sample[,"Y"])
 
 var_mean(mu_x = xbar, mu_y = ybar, sigma_x = sigma_x, 
-         sigma_xy = sigma_x_y, sigma_y = sigma_y, n = 10)
+         sigma_xy = sigma_x_y, sigma_y = sigma_y, n = 1000)
 ```
 
 # Relative Risk
@@ -601,17 +603,17 @@ to create a new environment called `DeltaMethod`. Write
 conda env list
 ```
 
-to get the path to your environment. For example my path is `/usr/local/Caskroom/miniconda/base/envs/DeltaMethod`. 
+to get the path to your environment. For example my path is ` /Users/MALF/opt/miniconda3/envs/DeltaMethod`. 
 
 We'll use this environment in the `R` code. Before loading library `caracas`, at the beginning of the code, write:
 ```{r, eval = FALSE}
-Sys.setenv(RETICULATE_PYTHON = "path/to/your/environment/bin/python")
+Sys.setenv(RETICULATE_PYTHON = " /Users/MALF/opt/miniconda3/envs/DeltaMethod/")
 ```
 
 for example, in my computer it ends up like this:
 
 ```{r}
-Sys.setenv(RETICULATE_PYTHON = "/usr/local/Caskroom/miniconda/base/envs/DeltaMethod/bin/python")
+Sys.setenv(RETICULATE_PYTHON = "/usr/local/MALF/opt/miniconda3/envs/DeltaMethod/python")
 ```
 
 to verify that the environment is set check its in `python` and `libpython`:
