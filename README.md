@@ -1,18 +1,17 @@
 ## The Delta-method and influence function in epidemiology: areproducible tutorial
 
 ### Authors
-Rodrigo Zepeda-Tello 1,2| Michael Schomaker 3,4| Aurelien Belot 5| Bernard Rachet 5| Mireille E.Schnitzer 6,7| Miguel Angel Luque Fernandez*5,8,9
+Rodrigo Zepeda-Tello 1| Michael Schomaker 2,3| Aurelien Belot 4| Camille Maringe 4| Mathew Smith 4| Bernard Rachet 4| Mireille E.Schnitzer 5,6| Miguel Angel Luque Fernandez*4,7,8
 
 ### Affiliations 
-1. Instituto Tecnologico Autonomo de Mexico, Mexico.
-2. Instituto Mexicano del Seguro Social, Mexico.
-3. Institute of Public Health, Medical Decision Making and Health Technology Assessment Department of Public Health, Health Services Research and Health Technology Assessment UMIT - University for Health Sciences, Medical Informatics and Technology, Austria.
-4. Centre for Infectious Disease Epidemiology and Research, University of Cape Town,South Africa.
-5. ICON-group. Non-communicable Disease Epidemiology. London School of Hygiene and Tropical Medicine. London, U.K.
-6. Faculty of Pharmacy and Department of Social and Preventive Medicine, University of Montreal, Montreal, Canada.
-7. Department of Epidemiology, Biostatistics and Occupational Health, McGill University, Montreal, Canada.
-8. Non-communicable Disease and Cancer Epidemiology Group, Instuto Biosanitario de Granada (ibs.GRANADA), Andalusian School of Public Health, University o fGranada, Granada, Spain.
-9. Biomedical Network Research Centers of Epidemiology and Public Health(CIBERESP), Madrid, Spain.
+1. Instituto Mexicano del Seguro Social, Mexico.
+2. Institute of Public Health, Medical Decision Making and Health Technology Assessment Department of Public Health, Health Services Research and Health Technology Assessment UMIT - University for Health Sciences, Medical Informatics and Technology, Austria.
+3. Centre for Infectious Disease Epidemiology and Research, University of Cape Town,South Africa.
+4. ICON-group. Non-communicable Disease Epidemiology. London School of Hygiene and Tropical Medicine. London, U.K.
+5. Faculty of Pharmacy and Department of Social and Preventive Medicine, University of Montreal, Montreal, Canada.
+6. Department of Epidemiology, Biostatistics and Occupational Health, McGill University, Montreal, Canada.
+7. Non-communicable Disease and Cancer Epidemiology Group, Instuto Biosanitario de Granada (ibs.GRANADA), Andalusian School of Public Health, University o fGranada, Granada, Spain.
+8. Biomedical Network Research Centers of Epidemiology and Public Health(CIBERESP), Madrid, Spain.
 
 Correspondence* Miguel Angel Luque-Fernandez, Email: miguel-angel.luque@lshtm.ac.uk  
 
