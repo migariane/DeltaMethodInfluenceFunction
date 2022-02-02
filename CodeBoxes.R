@@ -36,11 +36,14 @@ DeltaMethod(lm(y ~ 1), "b0")
 #       Estimate SE           2.5%   97.5%
 #    b0 0.508518 0.009161893 0.490561 0.526475
 
-## BOX TWO: ratio two means
+## BOX TWO: ratio two mean
+# Data generation
+library(mvtnorm)
 set.seed(123)
-sample           <- as.data.frame(mvrnorm(1000, c(3,4), matrix(c(1,0.3,0.3,2), ncol = 2)))
+sample  <- as.data.frame(rmvnorm(1000, c(3,4), matrix(c(1,0.3,0.3,2), ncol = 2)))
 colnames(sample) <- c("X","Y")
 sample <- as.data.frame(sample)
+# SE estimation for the ratio 
 attach(sample)
 ratio <- X/Y;mean(ratio)
 n <- 1000
@@ -49,7 +52,7 @@ b <-   ((mean(X))^2 / (mean(Y))^4) * var(Y)
 c <-    2 * ((mean(X)) / (mean(Y))^3) * cov(X,Y)
 var.IF <- 1/n *(a+b-c); var.IF
 SE <- sqrt(var.IF); SE
-CI = c(mean(ratio)-1.96*SE,mean(ratio)+1.96*SE); mean(ratio); CI
+CI = c(mean(ratio)-qnorm(0.975)*SE,mean(ratio)+qnorm(0.975)*SE); mean(ratio); CI
 
 ## BOX THREE
 install.packages("epitools")
