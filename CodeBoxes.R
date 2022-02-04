@@ -68,9 +68,27 @@ N2 <- 100
 ratio <- 0.6 / 0.4; ratio
 var.IF <- (1 / (p1)^2 * (p1 * (1 - p1)/ N1)) + (1 / (p2)^2 * (p2 * (1 - p2)/ N2));var.IF
 SE <- sqrt(var.IF); SE
-CI = c(log(ratio)-1.96*SE,log(ratio)+1.96*SE); ratio; exp(CI)
+CI = c(log(ratio)-qnorm(.975)*SE,log(ratio)+qnorm(.975)*SE); ratio; exp(CI)
 
 ## BOX FOUR
+#This should point to **your** Python path as explained in last section
+Sys.setenv(RETICULATE_PYTHON = #"/usr/local/Caskroom/miniconda/base/envs/DeltaMethod/bin/python")
+               "/Users/MALF/opt/miniconda3/envs/DeltaMethod/bin/python")
+library(caracas)
+library(reticulate)
+library(MASS)
+
+#Parser for Sympy (you need sympy version 1.10 or 1.9 development)
+#check sympy_version() to see you have the right one
+sympy_version()
+
+#Create parsers to find the functions check sympy's documentation
+#and substitute dots for $ in https://docs.sympy.org/latest/index.html
+sympy            <- get_sympy()
+Symbol           <- sympy$Symbol
+Derivative       <- sympy$derive_by_array
+Taylor           <- sympy$series
+LaTeX            <- sympy$latex
 #Get the variables
 x      <- Symbol('x', positive=T)
 #Tenth order Taylor
@@ -89,35 +107,35 @@ samples = 1000
 R = 0.83
 library('MASS')
 data = mvrnorm(n=samples, mu=c(0, 0), Sigma=matrix(c(1, R, R, 1), nrow=2), empirical=TRUE)
-U = data[, 1]  # standard normal (mu=0, sd=1)
-V = data[, 2]  # standard normal (mu=0, sd=1)
+X = data[, 1]  # standard normal (mu=0, sd=1)
+Y = data[, 2]  # standard normal (mu=0, sd=1)
 # Assess that it works
 cor(U, V)  # r = 0.83
 
-mu1 = mean(U*V)
-mu2 = mean(U)
-mu3 = mean(V)
-mu4 = mean(U^2)
-mu5 = mean(V^2) 
+mu1 = mean(X*Y)
+mu2 = mean(X)
+mu3 = mean(Y)
+mu4 = mean(X^2)
+mu5 = mean(Y^2) 
 
-IC1 = U*V-mu1 
-IC2 = U-mu2
-IC3 = V-mu3 
-IC4 = U^2-mu4 
-IC5 = V^2-mu5
+IF1 = X*Y-mu1 
+IF2 = X-mu2
+IF3 = Y-mu3 
+IF4 = X^2-mu4 
+IF5 = Y^2-mu5
 
-IC = 
-    (sqrt(mu4-mu2^2)*sqrt(mu5-mu3^2))^(-1)*IC1+ 
-    (-mu3*sqrt(mu4-mu2^2)*sqrt(mu5-mu3^2)+(mu1-mu2*mu3)*mu2*sqrt(mu5-mu3^2)/sqrt(mu4-mu2^2))/((mu4-mu2^2)*(mu5-mu3^2))*IC2+ 
-    (-mu2*sqrt(mu4-mu2^2)*sqrt(mu5-mu3^2)+(mu1-mu2*mu3)* mu3*sqrt(mu4-mu2^2)/sqrt(mu5-mu3^2))/((mu4-mu2^2)*(mu5-mu3^2))*IC3+ 
-    (-mu1+mu2*mu3)/(2*(mu4-mu2^2)^1.5*(mu5-mu3^2)^.5)*IC4+ 
-    (-mu1+mu2*mu3)/(2*(mu4-mu2^2)^.5*(mu5-mu3^2)^1.5)*IC5
+IF = 
+    (sqrt(mu4-mu2^2)*sqrt(mu5-mu3^2))^(-1)*IF1+ 
+    (-mu3*sqrt(mu4-mu2^2)*sqrt(mu5-mu3^2)+(mu1-mu2*mu3)*mu2*sqrt(mu5-mu3^2)/sqrt(mu4-mu2^2))/((mu4-mu2^2)*(mu5-mu3^2))*IF2+ 
+    (-mu2*sqrt(mu4-mu2^2)*sqrt(mu5-mu3^2)+(mu1-mu2*mu3)* mu3*sqrt(mu4-mu2^2)/sqrt(mu5-mu3^2))/((mu4-mu2^2)*(mu5-mu3^2))*IF3+ 
+    (-mu1+mu2*mu3)/(2*(mu4-mu2^2)^1.5*(mu5-mu3^2)^.5)*IF4+ 
+    (-mu1+mu2*mu3)/(2*(mu4-mu2^2)^.5*(mu5-mu3^2)^1.5)*IF5
 
 SE = sd(IC)/sqrt(1000); SE
 
 rho_hat = (mu1-mu2*mu3)/(sqrt(mu4-mu2^2)*sqrt(mu5-mu3^2)); rho_hat
-CI = c(rho_hat-1.96*SE,rho_hat+1.96*SE); CI
-## CI [1] 0.8106 0.8493
+CI = c(rho_hat-qnorm(0.975)*SE,rho_hat+qnorm(0.975)*SE); CI
+## CI [1] 0.810 0.849
 
 ## Using the function CIr from the psychometric package in R: 
 CIr(rho_hat,1000,.95)
