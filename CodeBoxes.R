@@ -17,6 +17,7 @@ plot(y, IF)
 # Standard Error: Influence Fuction
 varYhat.IF <- var(IF) / n # hatvar(hatIF) =1/n sum(yi-bary)^2
 seIF <- sqrt(varYhat.IF);seIF
+# 0.009161893
 # Asymptotic linear inference 95% Confidence Intervals
 Yhat_95CI <- c(mean(Yhat) - qnorm(0.975) * sqrt(varYhat.IF), mean(Yhat) + qnorm(0.975) * sqrt(varYhat.IF)); 
 mean(Yhat)
