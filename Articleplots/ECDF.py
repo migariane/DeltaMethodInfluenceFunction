@@ -49,7 +49,7 @@ ax = fig.add_subplot(1, 1, 1)
 ax.spines['right'].set_color('none')
 ax.spines['top'].set_color('none')
 
-ax.set_ylabel(r'$F_X(z) = \mathbb{P}(X \leq z)$', fontsize = 12)
+ax.set_ylabel(r'$F_Z(z) = \mathbb{P}(Z \leq z)$', fontsize = 12)
 ax.set_xlabel(r'$z$', fontsize = 12)
 
 # plot the function
