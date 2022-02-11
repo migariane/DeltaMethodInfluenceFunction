@@ -9,6 +9,9 @@ from statsmodels.distributions.empirical_distribution import ECDF
 from matplotlib import rc
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 rc('text', usetex=True)
+plt.rcParams.update({
+    'text.latex.preamble': r'\usepackage{amsfonts}'
+})
 
 #Uniform variables
 #create_xbar = lambda n, m: [np.mean(uniform(low=0, high=1, size=n)) for i in range(m)]
@@ -45,6 +48,9 @@ ax = fig.add_subplot(1, 1, 1)
 #ax.spines['bottom'].set_position('zero')
 ax.spines['right'].set_color('none')
 ax.spines['top'].set_color('none')
+
+ax.set_ylabel(r'$F_X(z) = \mathbb{P}(X \leq z)$', fontsize = 12)
+ax.set_xlabel(r'$z$', fontsize = 12)
 
 # plot the function
 plt.plot(x,cdf,'k', zorder=5, alpha = 0.35, lw = 2, label=r"$n = \infty$")
