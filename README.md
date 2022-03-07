@@ -1,4 +1,4 @@
-[![Open In Collab](https://colab.research.google.com/drive/1kMdpifukqeOek1ztUy-Vr4Gg6s12t4St?usp=sharing)
+[![Open In Collab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1kMdpifukqeOek1ztUy-Vr4Gg6s12t4St?usp=sharing)
 
 ## The Delta-method and influence function in epidemiology: a reproducible tutorial
 
