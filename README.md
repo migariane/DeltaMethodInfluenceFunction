@@ -1,4 +1,6 @@
-## The Delta-method and influence function in epidemiology: areproducible tutorial
+[![Open In Collab](https://colab.research.google.com/drive/1kMdpifukqeOek1ztUy-Vr4Gg6s12t4St?usp=sharing)
+
+## The Delta-method and influence function in epidemiology: a reproducible tutorial
 
 ### Authors
 Rodrigo Zepeda-Tello 1| Michael Schomaker 2,3| Aurelien Belot 4| Camille Maringe 4| Mathew Smith 4| Bernard Rachet 4| Mireille E.Schnitzer 5,6| Miguel Angel Luque Fernandez*4,7,8
