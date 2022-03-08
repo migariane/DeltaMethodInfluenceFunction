@@ -1,6 +1,34 @@
 
 ## BOX ONE
 # Data generation
+set.seed (05061972)
+N <- 1000
+# Age (1: > 65; 0: <= 65)
+age <- rbinom(N,1 ,0.6)
+# SES (1: middle class and higher)
+SES <- rbinom(N,1,plogis (0.97 + 0.03*age))
+# comorbidities (1: any , 0: none)
+comorbidity <- rbinom(N,1,plogis (0.7 + 0.010*age - 0.15*SES))
+# stage (1: advanced , TNS=3 or 4; 0: TNS= 1 or 2)
+stage <- rbinom(N,1,plogis (-1.0 + 0.1*age - 0.05*SES + 0.2*comorbidity))
+# treatment (1: dual; 0=mono)
+treat <- rbinom(N,1,plogis (0.35 + 0.015*stage - 0.15*age + 0.015*SES - 0.3*comorbidity))
+# Counterfactual outcome under A=1 and A=0 respectively
+death .1 <- rbinom(N,1,plogis(-2 - 1*1 + 0.65*age - 0.025*SES + 0.25*comorbidity + 0.75*stage + 0.025*1*SES -
+                                     0.35*1*comorbidity))
+death .0 <- rbinom(N,1,plogis(-2 - 1*0 + 0.65*age - 0.025*SES + 0.25*comorbidity + 0.75*stage + 0.025*0*SES -
+                                     0.35*0*comorbidity)
+# Observed outcome: mortality at 1 year after treatment initiation (1: death)
+death <- death.1*treat + death.0*(1 - treat)
+# OR -> if treated , lower prob of death
+exp(coefficients(glm(death~treat ,family=binomial)))
+# RR
+exp(coefficients(glm(death ~ treat + age + SES + comorbidity + stage ,family=poisson)))
+# risk differences
+mean(death.1 - death.0)
+## -0.124                  
+
+## BOX TWO
 set.seed(7777)
 n <- 1000
 y <- runif(n, 0, 1)
@@ -37,7 +65,7 @@ DeltaMethod(lm(y ~ 1), "b0")
 #       Estimate SE           2.5%   97.5%
 #    b0 0.508518 0.009161893 0.490561 0.526475
 
-## BOX TWO: ratio two mean
+## BOX THREE: ratio two means
 # Data generation
 library(mvtnorm)
 set.seed(123)
@@ -55,63 +83,41 @@ var.IF <- 1/n *(a+b-c); var.IF
 SE <- sqrt(var.IF); SE
 CI = c(mean(ratio)-qnorm(0.975)*SE,mean(ratio)+qnorm(0.975)*SE); mean(ratio); CI
 
-## BOX THREE
+## BOX FOUR
 install.packages("epitools")
 library(epitools)
 RRtable <- matrix(c(60,40,40,60),nrow = 2, ncol = 2)
 RRtable
 # The next line asks R to compute the RR and 95% confidence interval
 riskratio.wald(RRtable)
+# 1.5
 p1 <- 0.6
 p2 <- 0.4
 N1 <- 100
 N2 <- 100
 ratio <- 0.6 / 0.4; ratio
+# 1.5
 var.IF <- (1 / (p1)^2 * (p1 * (1 - p1)/ N1)) + (1 / (p2)^2 * (p2 * (1 - p2)/ N2));var.IF
 SE <- sqrt(var.IF); SE
+# 0.147196
 CI = c(log(ratio)-qnorm(.975)*SE,log(ratio)+qnorm(.975)*SE); ratio; exp(CI)
-
-## BOX FOUR
-#This should point to **your** Python path as explained in last section
-Sys.setenv(RETICULATE_PYTHON = #"/usr/local/Caskroom/miniconda/base/envs/DeltaMethod/bin/python")
-               "/Users/MALF/opt/miniconda3/envs/DeltaMethod/bin/python")
-library(caracas)
-library(reticulate)
-library(MASS)
-
-#Parser for Sympy (you need sympy version 1.10 or 1.9 development)
-#check sympy_version() to see you have the right one
-sympy_version()
-
-#Create parsers to find the functions check sympy's documentation
-#and substitute dots for $ in https://docs.sympy.org/latest/index.html
-sympy            <- get_sympy()
-Symbol           <- sympy$Symbol
-Derivative       <- sympy$derive_by_array
-Taylor           <- sympy$series
-LaTeX            <- sympy$latex
-#Get the variables
-x      <- Symbol('x', positive=T)
-#Tenth order Taylor
-Taylor("(exp(1/x) - 1)/exp(1/x)", x0 = 0, n = 10)$removeO()
-
+# 1.124081 2.001634
 
 ## BOX FIVE
-# Delta-method for the SE of the correlation between two vectors U and V based on the IF.
-#install.packages("psychometric")
+# Delta-method for the SE of the correlation between two vectors X and Y based on the IF.
 #install.packages("MASS")
-library(psychometric)
 library('MASS')
 
 # Generate the data
 samples = 1000
 R = 0.83
 library('MASS')
+set.seed(1)
 data = mvrnorm(n=samples, mu=c(0, 0), Sigma=matrix(c(1, R, R, 1), nrow=2), empirical=TRUE)
 X = data[, 1]  # standard normal (mu=0, sd=1)
 Y = data[, 2]  # standard normal (mu=0, sd=1)
 # Assess that it works
-cor(U, V)  # r = 0.83
+cor(X, Y)  # r = 0.83
 
 mu1 = mean(X*Y)
 mu2 = mean(X)
@@ -132,15 +138,27 @@ IF =
     (-mu1+mu2*mu3)/(2*(mu4-mu2^2)^1.5*(mu5-mu3^2)^.5)*IF4+ 
     (-mu1+mu2*mu3)/(2*(mu4-mu2^2)^.5*(mu5-mu3^2)^1.5)*IF5
 
-SE = sd(IC)/sqrt(1000); SE
+SE = sd(IF)/sqrt(1000); SE
 
 rho_hat = (mu1-mu2*mu3)/(sqrt(mu4-mu2^2)*sqrt(mu5-mu3^2)); rho_hat
 CI = c(rho_hat-qnorm(0.975)*SE,rho_hat+qnorm(0.975)*SE); CI
-## CI [1] 0.810 0.849
+## CI [1] 0.8107681 0.8492319
 
-## Using the function CIr from the psychometric package in R: 
-CIr(rho_hat,1000,.95)
-## [1] 0.8096 0.8483
+## Checking results:
+## Pearson correlation and "normal" confidence intervals.
+install.packages("confintr")
+library(confintr)
+ci_cor(X,Y)
+#Sample estimate: 0.83 
+#Confidence interval:
+#    2.5%     97.5% 
+#    0.8096678 0.8483423 
+
+## Also bootstrap confidence intervals are supported and are the only option for rank correlations. 
+# install.packages('boot')
+library(boot)
+ci_cor(X,Y, method = "pearson", type = "bootstrap", R = 1000, seed = 1)
+
 
 ## BOX SIX: Data generation (simulated example) to apply the Delta-method in a multiple regression 
 # Data generation
@@ -169,7 +187,7 @@ exp(coefficients(glm(death ~ treat + age + SES + morbidity + stage,family=poisso
 mean(death.1-death.0)
 ## -0.124
 
-## BOX SEVEN
+## BOX SIX
 # Delta method to derive the SE for the conditional RR
 data  <- as.data.frame(cbind(death , treat , age , SES , morbidity , stage))
 m1 <- glm(death ~ age + treat, family = binomial, data = data)
@@ -212,8 +230,8 @@ se_rr_delta
 # We obtain the same results for the SE of the RR computed before
 
 # Finally, we compute the type Wald 95% CI
-lb <- rr - 1.96 * sqrt(vG)
-ub <- rr + 1.96 * sqrt(vG)
+lb <- rr - qnorm(.975) * sqrt(vG)
+ub <- rr + qnorm(.975) * sqrt(vG)
 # Conditional Risk Ratio (95%CI)
 c(lb, ub)
 ## [1] 2.386165 6.426072
