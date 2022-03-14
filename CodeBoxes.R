@@ -1,34 +1,5 @@
 
 ## BOX ONE
-# Data generation
-set.seed (05061972)
-N <- 1000
-# Age (1: > 65; 0: <= 65)
-age <- rbinom(N,1 ,0.6)
-# SES (1: middle class and higher)
-SES <- rbinom(N,1,plogis (0.97 + 0.03*age))
-# comorbidities (1: any , 0: none)
-comorbidity <- rbinom(N,1,plogis (0.7 + 0.010*age - 0.15*SES))
-# stage (1: advanced , TNS=3 or 4; 0: TNS= 1 or 2)
-stage <- rbinom(N,1,plogis (-1.0 + 0.1*age - 0.05*SES + 0.2*comorbidity))
-# treatment (1: dual; 0=mono)
-treat <- rbinom(N,1,plogis (0.35 + 0.015*stage - 0.15*age + 0.015*SES - 0.3*comorbidity))
-# Counterfactual outcome under A=1 and A=0 respectively
-death .1 <- rbinom(N,1,plogis(-2 - 1*1 + 0.65*age - 0.025*SES + 0.25*comorbidity + 0.75*stage + 0.025*1*SES -
-                                     0.35*1*comorbidity))
-death .0 <- rbinom(N,1,plogis(-2 - 1*0 + 0.65*age - 0.025*SES + 0.25*comorbidity + 0.75*stage + 0.025*0*SES -
-                                     0.35*0*comorbidity)
-# Observed outcome: mortality at 1 year after treatment initiation (1: death)
-death <- death.1*treat + death.0*(1 - treat)
-# OR -> if treated , lower prob of death
-exp(coefficients(glm(death~treat ,family=binomial)))
-# RR
-exp(coefficients(glm(death ~ treat + age + SES + comorbidity + stage ,family=poisson)))
-# risk differences
-mean(death.1 - death.0)
-## -0.124                  
-
-## BOX TWO
 set.seed(7777)
 n <- 1000
 y <- runif(n, 0, 1)
@@ -65,7 +36,7 @@ DeltaMethod(lm(y ~ 1), "b0")
 #       Estimate SE           2.5%   97.5%
 #    b0 0.508518 0.009161893 0.490561 0.526475
 
-## BOX THREE: ratio two means
+## BOX TWO: ratio two means
 # Data generation
 library(mvtnorm)
 set.seed(123)
@@ -83,7 +54,7 @@ var.IF <- 1/n *(a+b-c); var.IF
 SE <- sqrt(var.IF); SE
 CI = c(mean(ratio)-qnorm(0.975)*SE,mean(ratio)+qnorm(0.975)*SE); mean(ratio); CI
 
-## BOX FOUR
+## BOX THREE
 install.packages("epitools")
 library(epitools)
 RRtable <- matrix(c(60,40,40,60),nrow = 2, ncol = 2)
@@ -103,7 +74,7 @@ SE <- sqrt(var.IF); SE
 CI = c(log(ratio)-qnorm(.975)*SE,log(ratio)+qnorm(.975)*SE); ratio; exp(CI)
 # 1.124081 2.001634
 
-## BOX FIVE
+## BOX FOUR
 # Delta-method for the SE of the correlation between two vectors X and Y based on the IF.
 #install.packages("MASS")
 library('MASS')
@@ -160,73 +131,63 @@ library(boot)
 ci_cor(X,Y, method = "pearson", type = "bootstrap", R = 1000, seed = 1)
 
 
-## BOX SIX: Data generation (simulated example) to apply the Delta-method in a multiple regression 
+## BOX FIVE: Data generation (simulated example) to apply the Delta-method in a multiple regression 
 # Data generation
-set.seed(05061972)
+set.seed (1972)
 N <- 1000
 # Age (1: > 65; 0: <= 65)
-age <- rbinom(N,1,0.6)                                    
-# SES (1: middle class and higher)
-SES <- rbinom(N,1,plogis(0.97 + 0.03*age))  
-# comorbidities (1: any, 0: none)
-morbidity <- rbinom(N,1,plogis(0.7 + 0.010*age - 0.15*SES))     
-# stage (1: advanced, TNS=3 or 4; 0: TNS= 1 or 2)
-stage <- rbinom(N,1,plogis(-1.0 + 0.1*age - 0.05*SES + 0.2*morbidity)) 
+age <- rbinom(N,1 ,0.6)
 # treatment (1: dual; 0=mono)
-treat <- rbinom(N,1,plogis(0.35 + 0.015*stage - 0.15*age + 0.015*SES - 0.3*morbidity)) 
+treat <- rbinom(N,1,plogis (0.35 - 0.15*age))
 # Counterfactual outcome under A=1 and A=0 respectively
-death.1 <-  rbinom(N,1,plogis(-2 - 1*1 + 0.65*age - 0.025*SES + 0.25*morbidity + 0.75*stage + 0.025*1*SES - 0.35*1*morbidity))
-death.0 <-  rbinom(N,1,plogis(-2 - 1*0 + 0.65*age - 0.025*SES + 0.25*morbidity + 0.75*stage + 0.025*0*SES - 0.35*0*morbidity))
+death.1 <- rbinom(N,1,plogis(2 - 1*1 + 0.65*age))
+death.0 <- rbinom(N,1,plogis(2 - 1*0 + 0.65*age))
 # Observed outcome: mortality at 1 year after treatment initiation (1: death)
 death <- death.1*treat + death.0*(1 - treat)
-# OR -> if treated, lower prob of death
-exp(coefficients(glm(death~treat,family=binomial)))
-# RR
-exp(coefficients(glm(death ~ treat + age + SES + morbidity + stage,family=poisson)))
-# risk differences
-mean(death.1-death.0)
-## -0.124
+# One year mortality risk differences
+mean(death.1 - death.0)
+## -0.13                  
 
 ## BOX SIX
 # Delta method to derive the SE for the conditional RR
-data  <- as.data.frame(cbind(death , treat , age , SES , morbidity , stage))
-m1 <- glm(death ~ age + treat, family = binomial, data = data)
-pMono <- predict(m1, newdata = data.frame(age = 1, treat = 0), type = "response")
-pDual <- predict(m1, newdata = data.frame(age = 0, treat = 1), type = "response")
+data  <- as.data.frame(cbind(death , treat , age))
+m <- glm(death ~ age + treat, family = binomial, data = data)
+pMono <- predict(m, newdata = data.frame(age = 1, treat = 0), type = "response")
+pDual <- predict(m, newdata = data.frame(age = 0, treat = 1), type = "response")
 rr <- pMono / pDual
 cat("Conditional risk ratio: ", rr)
-# Conditional Risk Ratio:  4.406118
+# Conditional Risk Ratio:  1.330238
 
 # The partial derivative are computed in R as follows:
 x1 <- 1
 x2 <- 0
-x3 <- 1
-x4 <- 0
-b0 <- coef(m1)[1]
-b1 <- coef(m1)[2]
-b2 <- coef(m1)[3]
-e1 <- exp(- b0 - 1 * b1 - 0 * b2)
-e2 <- exp(- b0 - 0 * b1 - 1 * b2)
+x3 <- 0
+x4 <- 1
+b0 <- coef(m)[1]
+b1 <- coef(m)[2]
+b2 <- coef(m)[3]
+e1 <- exp(- b0 - 1*b1 - 0*b2)
+e2 <- exp(- b0 - 0*b1 - 1*b2)
 p1 <- 1 / (1 + e1)
 p2 <- 1 / (1 + e2)
-dfdb0 <- - e2 * p1 + (1 + e2) * p1 * (1 - p1)
-dfdb1 <- - x2 * e2 * p1 + (1 + e2) * x1 * p1 * (1 - p1)
-dfdb2 <- - x4 * e2 * p1 + (1 + e2) * x3 * p1 * (1 - p1)
+# check rr 
+p1/p2
+# 1.330238
+dfdb0 <- -e2*p1 + (1 + e2)*p1*(1 - p1)
+dfdb1 <- -x2*e2*p1 + (1 + e2)*x1*p1*(1 - p1)
+dfdb2 <- -x4*e2*p1 + (1 + e2)*x3*p1*(1 - p1)
 grad <- c(dfdb0, dfdb1, dfdb2)
-vG <- t(grad) %*% vcov(m1) %*% (grad)
+vG <- t(grad) %*% vcov(m) %*% (grad)
 se_rr <- c(sqrt(vG))
 se_rr
-## [1] 1.038303
-
+# 0.06057779
 # Check with implemented delta-method in library msm 
 library(msm)
-se_rr_delta <- deltamethod( ~ (1 + exp(- x1 - 0 * x2 - 1 * x3)) /
-                                (1 + exp(- x1 - 1 * x2 - 0 * x3)), 
+se_rr_delta <- deltamethod( ~(1 + exp(-x1 -0*x2 -1*x3)) /
+                                (1 + exp(-x1 -1*x2 -0*x3)), 
                             c(b0, b1, b2), 
-                            vcov(m1)
-)
-se_rr_delta
-## [1] 1.038303
+                            vcov(m));se_rr_delta
+## 0.06057779
 # We obtain the same results for the SE of the RR computed before
 
 # Finally, we compute the type Wald 95% CI
@@ -234,4 +195,4 @@ lb <- rr - qnorm(.975) * sqrt(vG)
 ub <- rr + qnorm(.975) * sqrt(vG)
 # Conditional Risk Ratio (95%CI)
 c(lb, ub)
-## [1] 2.386165 6.426072
+##  1.211508 1.448968
