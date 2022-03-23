@@ -1,3 +1,19 @@
+# The Delta-method and influence function in epidemiology: a reproducible tutorial
+
+# Authors
+# Rodrigo Zepeda-Tello 1| Michael Schomaker 2,3| Aurelien Belot 4| Camille Maringe 4| Mathew Smith 4| Bernard Rachet 4| Mireille E.Schnitzer 5,6| Miguel Angel Luque Fernandez*4,7,8
+
+# Affiliations 
+#1. Instituto Mexicano del Seguro Social, Mexico.
+#2. Institute of Public Health, Medical Decision Making and Health Technology Assessment Department of Public Health, Health Services Research and Health Technology Assessment UMIT - University for Health Sciences, Medical Informatics and Technology, Austria.
+#3. Centre for Infectious Disease Epidemiology and Research, University of Cape Town,South Africa.
+#4. ICON-group. Non-communicable Disease Epidemiology. London School of Hygiene and Tropical Medicine. London, U.K.
+#5. Faculty of Pharmacy and Department of Social and Preventive Medicine, University of Montreal, Montreal, Canada.
+#6. Department of Epidemiology, Biostatistics and Occupational Health, McGill University, Montreal, Canada.
+#7. Non-communicable Disease and Cancer Epidemiology Group, Instuto Biosanitario de Granada (ibs.GRANADA), Andalusian School of Public Health, University o fGranada, Granada, Spain.
+#8. Biomedical Network Research Centers of Epidemiology and Public Health(CIBERESP), Madrid, Spain.
+
+#Correspondence* Miguel Angel Luque-Fernandez, Email: miguel-angel.luque@lshtm.ac.uk  
 
 ## BOX ONE
 set.seed(7777)
@@ -170,7 +186,7 @@ e1 <- exp(- b0 - 1*b1 - 0*b2)
 e2 <- exp(- b0 - 0*b1 - 1*b2)
 p1 <- 1 / (1 + e1)
 p2 <- 1 / (1 + e2)
-# check rr 
+# check RR
 p1/p2
 # 1.330238
 dfdb0 <- -e2*p1 + (1 + e2)*p1*(1 - p1)
