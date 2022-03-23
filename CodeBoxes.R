@@ -178,7 +178,7 @@ dfdb1 <- -x2*e2*p1 + (1 + e2)*x1*p1*(1 - p1)
 dfdb2 <- -x4*e2*p1 + (1 + e2)*x3*p1*(1 - p1)
 grad <- c(dfdb0, dfdb1, dfdb2)
 vG <- t(grad) %*% vcov(m) %*% (grad)
-se_rr <- c(sqrt(vG))
+se_rr <- c(sqrt(diag(vG))))
 se_rr
 # 0.06057779
 # Check with implemented delta-method in library msm 

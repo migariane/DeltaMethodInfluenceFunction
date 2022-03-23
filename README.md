@@ -1,4 +1,8 @@
-[![Open In Collab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1kMdpifukqeOek1ztUy-Vr4Gg6s12t4St?usp=sharing)
+#### Colab Python  
+[![Open In Collab Python](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1kMdpifukqeOek1ztUy-Vr4Gg6s12t4St?usp=sharing)  
+
+#### Colab R  
+[![Open In Collab R](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/migariane/DeltaMethodInfluenceFunction/blob/main/R-CodeBoxes.ipynb)  
 
 ## The Delta-method and influence function in epidemiology: a reproducible tutorial
 
