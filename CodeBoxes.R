@@ -5,7 +5,7 @@
 
 # Affiliations 
 #1. Instituto Mexicano del Seguro Social, Mexico.
-#2. Institute of Public Health, Medical Decision Making and Health Technology Assessment Department of Public Health, Health Services Research and Health Technology Assessment UMIT - University for Health Sciences, Medical Informatics and Technology, Austria.
+#2. Institut für Statistik, Ludwig-Maximilians-Universität München, 80799 München, Germany.
 #3. Centre for Infectious Disease Epidemiology and Research, University of Cape Town,South Africa.
 #4. ICON-group. Non-communicable Disease Epidemiology. London School of Hygiene and Tropical Medicine. London, U.K.
 #5. Faculty of Pharmacy and Department of Social and Preventive Medicine, University of Montreal, Montreal, Canada.
@@ -15,11 +15,14 @@
 
 #Correspondence* Miguel Angel Luque-Fernandez, Email: miguel-angel.luque@lshtm.ac.uk  
 
-## BOX ONE
+############
+## BOX ONE #
+############
+
 set.seed(7777)
 n <- 1000
-y <- runif(n, 0, 1)
-theoretical_mu <- 0.5 
+y <- runif(n, 0, 1) # random numbers from uniform distribution, U(0,1)
+theoretical_mu <- 0.5 # expectation from U(0,1)
 empirical_mu <- mean(y)
 # Functional delta-method: influence curve for the sample mean (first derivative=1(constant))
 IF <- 1 * (y - empirical_mu)
@@ -29,12 +32,12 @@ Yhat <- y + IF # Plug-in estimator
 mean(Yhat)
 # Geometry of the IF
 plot(y, IF)
-# Standard Error: Influence Fuction
-varYhat.IF <- var(IF) / n # hatvar(hatIF) =1/n sum(yi-bary)^2
+# Standard Error as estimated through the emprirical influence function
+varYhat.IF <- var(IF) / n # hatvar(hatIF) =1/(n-1) sum(yi-bary)^2
 seIF <- sqrt(varYhat.IF);seIF
 # 0.009161893
-# Asymptotic linear inference 95% Confidence Intervals
-Yhat_95CI <- c(mean(Yhat) - qnorm(0.975) * sqrt(varYhat.IF), mean(Yhat) + qnorm(0.975) * sqrt(varYhat.IF)); 
+# Two-sided 95% Confidence Interval
+Yhat_95CI <- c(mean(Yhat) - qnorm(0.975) * seIF, mean(Yhat) + qnorm(0.975) * seIF); 
 mean(Yhat)
 ## [1] 0.508518
 Yhat_95CI
@@ -51,6 +54,13 @@ library(RcmdrMisc)
 DeltaMethod(lm(y ~ 1), "b0")
 #       Estimate SE           2.5%   97.5%
 #    b0 0.508518 0.009161893 0.490561 0.526475
+
+### Plot in publishable format
+setwd("C:/Users/ua341au/Dropbox/Documents/GitHub/DeltaMethodInfluenceFunction")
+pdf(file=paste0(getwd(),"/IF_box1.pdf"),width=9)
+par(mar= c(5, 5, 2, 2))
+plot(y, IF, cex.axis=1.75,cex.lab=1.75,cex=2,xlim=c(0,1),ylim=c(-0.5,0.5),xlab="Y",ylab="Influence Function",type="l")
+dev.off()
 
 ## BOX TWO: ratio two means
 # Data generation
