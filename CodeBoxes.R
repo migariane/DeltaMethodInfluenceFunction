@@ -5,7 +5,7 @@
 
 # Affiliations 
 #1. Instituto Mexicano del Seguro Social, Mexico.
-#2. Institut für Statistik, Ludwig-Maximilians-Universität München, 80799 München, Germany.
+#2. Institut f?r Statistik, Ludwig-Maximilians-Universit?t M?nchen, 80799 M?nchen, Germany.
 #3. Centre for Infectious Disease Epidemiology and Research, University of Cape Town,South Africa.
 #4. ICON-group. Non-communicable Disease Epidemiology. London School of Hygiene and Tropical Medicine. London, U.K.
 #5. Faculty of Pharmacy and Department of Social and Preventive Medicine, University of Montreal, Montreal, Canada.
@@ -66,11 +66,11 @@ dev.off()
 # Data generation
 library(mvtnorm)
 set.seed(123)
-sample  <- as.data.frame(rmvnorm(1000, c(3,4), matrix(c(1,0.3,0.3,2), ncol = 2)))
-colnames(sample) <- c("X","Y")
-sample <- as.data.frame(sample)
+data  <- as.data.frame(rmvnorm(1000, c(3,4), matrix(c(1,0.3,0.3,2), ncol = 2)))
+colnames(data) <- c("X","Y")
+data <- as.data.frame(data)
 # SE estimation for the ratio 
-attach(sample)
+attach(data)
 ratio <- X/Y;mean(ratio)
 n <- 1000
 a <-    (1 / (mean(Y))^2) * var(X) 
