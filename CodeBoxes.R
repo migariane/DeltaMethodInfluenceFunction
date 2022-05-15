@@ -69,9 +69,9 @@ set.seed(123)
 data  <- as.data.frame(rmvnorm(1000, c(3,4), matrix(c(1,0.3,0.3,2), ncol = 2)))
 colnames(data) <- c("X","Y")
 data <- as.data.frame(data)
-# SE estimation for the ratio 
+# SE estimation for the ratio (Delta Method based on the IF)
 attach(data)
-ratio <- X/Y;mean(ratio)
+ratio <- mean(X)/mean(Y);mean(ratio)
 n <- 1000
 a <-    (1 / (mean(Y))^2) * var(X) 
 b <-   ((mean(X))^2 / (mean(Y))^4) * var(Y) 
@@ -79,6 +79,33 @@ c <-    2 * ((mean(X)) / (mean(Y))^3) * cov(X,Y)
 var.IF <- 1/n *(a+b-c); var.IF
 SE <- sqrt(var.IF); SE
 CI = c(mean(ratio)-qnorm(0.975)*SE,mean(ratio)+qnorm(0.975)*SE); mean(ratio); CI
+# Cheking results
+# CI Delta method
+theta1 <- mean(X)
+sd1 <- sd(X)
+theta2 <- mean(Y)
+sd2 <- sd(Y)
+CI.Delta = function(theta1, sd1,
+                    theta2, sd2,# estimate and estimated sd of estimator
+                    alpha # theoretical coverage (1-alpha)
+)
+{
+    ## CI Delta method
+    ## Hirschberg, J., and J. Lye. 2010.
+    ## “A Geometric Comparison of the Delta and Fieller Confidence Intervals.”
+    ## The American Statistician 64 (3): 234–41, Eq. 3-6
+    ## We assume here independence between theta1.hat and theta2.hat
+    z = qnorm(p=1-alpha/2)
+    R = theta1/theta2
+    sd.R = sqrt(sd1^2 + R^2 * sd2^2)/theta2
+    L = R - z*sd.R
+    U = R + z*sd.R
+    res = c(R,L,U)
+    names(res) = c('R','L','U')
+    return(res)
+}
+# END CI Delta met
+CI.Delta(theta1, sd1, theta2, sd2, 0.95)
 
 ## BOX THREE
 install.packages("epitools")
