@@ -5,7 +5,7 @@
 
 # Affiliations 
 #1. Instituto Mexicano del Seguro Social, Mexico.
-#2. Institut f?r Statistik, Ludwig-Maximilians-Universit?t M?nchen, 80799 M?nchen, Germany.
+#2. Institut fur Statistik, Ludwig-Maximilians-Universitat Munchen, 80799 Munchen, Germany.
 #3. Centre for Infectious Disease Epidemiology and Research, University of Cape Town,South Africa.
 #4. ICON-group. Non-communicable Disease Epidemiology. London School of Hygiene and Tropical Medicine. London, U.K.
 #5. Faculty of Pharmacy and Department of Social and Preventive Medicine, University of Montreal, Montreal, Canada.
@@ -15,9 +15,9 @@
 
 #Correspondence* Miguel Angel Luque-Fernandez, Email: miguel-angel.luque@lshtm.ac.uk  
 
-############
-## BOX ONE #
-############
+#################################################
+## BOX ONE: Sample mean (classial Delta-Method)
+#################################################
 
 set.seed(7777)
 n <- 1000
@@ -62,7 +62,37 @@ par(mar= c(5, 5, 2, 2))
 plot(y, IF, cex.axis=1.75,cex.lab=1.75,cex=2,xlim=c(0,1),ylim=c(-0.5,0.5),xlab="Y",ylab="Influence Function",type="l")
 dev.off()
 
-## BOX TWO: ratio two means
+######################################################################
+## BOX TWO: Sample mean seen as functional (Functional Delta-method)
+######################################################################
+
+# Data generation
+set.seed(7777)
+library(kdensity)
+library(EnvStats)
+n           <- 1000
+y           <- rnorm(n,50)
+my_p        <- 0.25 #Change as you see fit
+
+#Compute the first quartile 
+empirical_quantile <- quantile(y, my_p); empirical_quantile
+f_hat              <- kdensity(y, kernel = "epanechnikov", normalized = F)
+plot(f_hat, main = "Estimated density f() of data")
+
+# IF based 95%CI for Y 
+var_IF  <- my_p*(1 - my_p)/(f_hat(empirical_quantile)^2)
+SEy_IF  <- sqrt(var_IF/n)
+CI      <- c(empirical_quantile - qnorm(0.975)*SEy_IF, empirical_quantile + qnorm(0.975)*SEy_IF); CI
+
+# Check results binomial and asymptotically based 95%CI 
+eqnpar(x=y, p=my_p, ci=TRUE, ci.method="exact",approx.conf.level=0.95)$interval$limits
+
+eqnpar(x=y, p=my_p, ci=TRUE, ci.method="normal.approx",approx.conf.level=0.95)$interval$limits
+
+##############################
+## BOX THREE: ratio two means
+#############################
+
 # Data generation
 library(mvtnorm)
 set.seed(123)
@@ -107,7 +137,10 @@ CI.Delta = function(theta1, sd1,
 # END CI Delta met
 CI.Delta(theta1, sd1, theta2, sd2, 0.95)
 
-## BOX THREE
+####################################
+## BOX FOUR: ratio two proportions
+####################################
+
 install.packages("epitools")
 library(epitools)
 RRtable <- matrix(c(60,40,40,60),nrow = 2, ncol = 2)
@@ -127,7 +160,10 @@ SE <- sqrt(var.IF); SE
 CI = c(log(ratio)-qnorm(.975)*SE,log(ratio)+qnorm(.975)*SE); ratio; exp(CI)
 # 1.124081 2.001634
 
-## BOX FOUR
+#########################################
+## BOX FIVE: CORRELATION BETWEEN X AND Y
+#########################################
+
 # Delta-method for the SE of the correlation between two vectors X and Y based on the IF.
 #install.packages("MASS")
 library('MASS')
@@ -183,8 +219,11 @@ ci_cor(X,Y)
 library(boot)
 ci_cor(X,Y, method = "pearson", type = "bootstrap", R = 1000, seed = 1)
 
+####################################################################################
+## BOX SIX: Delta method to derive the SE for the conditional RR (Data generation)
+####################################################################################
 
-## BOX FIVE: Data generation (simulated example) to apply the Delta-method in a multiple regression 
+## Data generation (simulated example) to apply the Delta-method in a multiple regression 
 # Data generation
 set.seed (1972)
 N <- 1000
@@ -201,8 +240,10 @@ death <- death.1*treat + death.0*(1 - treat)
 mean(death.1 - death.0)
 ## -0.13                  
 
-## BOX SIX
-# Delta method to derive the SE for the conditional RR
+###################################################################
+## BOX SEVEN: Delta method to derive the SE for the conditional RR
+###################################################################
+
 data  <- as.data.frame(cbind(death , treat , age))
 m <- glm(death ~ age + treat, family = binomial, data = data)
 pMono <- predict(m, newdata = data.frame(age = 1, treat = 0), type = "response")
@@ -223,9 +264,11 @@ e1 <- exp(- b0 - 1*b1 - 0*b2)
 e2 <- exp(- b0 - 0*b1 - 1*b2)
 p1 <- 1 / (1 + e1)
 p2 <- 1 / (1 + e2)
+
 # check RR
 p1/p2
 # 1.330238
+
 dfdb0 <- -e2*p1 + (1 + e2)*p1*(1 - p1)
 dfdb1 <- -x2*e2*p1 + (1 + e2)*x1*p1*(1 - p1)
 dfdb2 <- -x4*e2*p1 + (1 + e2)*x3*p1*(1 - p1)
@@ -234,6 +277,7 @@ vG <- t(grad) %*% vcov(m) %*% (grad)
 se_rr <- c(sqrt(diag(vG))))
 se_rr
 # 0.06057779
+
 # Check with implemented delta-method in library msm 
 library(msm)
 se_rr_delta <- deltamethod( ~(1 + exp(-x1 -0*x2 -1*x3)) /
@@ -241,11 +285,13 @@ se_rr_delta <- deltamethod( ~(1 + exp(-x1 -0*x2 -1*x3)) /
                             c(b0, b1, b2), 
                             vcov(m));se_rr_delta
 ## 0.06057779
+
 # We obtain the same results for the SE of the RR computed before
 
 # Finally, we compute the type Wald 95% CI
 lb <- rr - qnorm(.975) * sqrt(vG)
 ub <- rr + qnorm(.975) * sqrt(vG)
+
 # Conditional Risk Ratio (95%CI)
 c(lb, ub)
 ##  1.211508 1.448968
