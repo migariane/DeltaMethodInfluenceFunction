@@ -7,7 +7,7 @@
 ## The Delta-method and influence function in epidemiology: a reproducible tutorial
 
 ### Authors
-Rodrigo Zepeda-Tello 1| Michael Schomaker 2,3| Aurelien Belot 4| Camille Maringe 4| Mathew Smith 4| Bernard Rachet 4| Mireille E.Schnitzer 5,6| Miguel Angel Luque Fernandez*4,7,8
+Rodrigo Zepeda-Tello 1| Michael Schomaker 2,3| Aurelien Belot 4| Camille Maringe 4| Mathew Smith 4| Bernard Rachet 4| Mireille E.Schnitzer 5,6| Miguel Angel Luque Fernandez*4,7
 
 ### Affiliations 
 1. Instituto Mexicano del Seguro Social, Mexico.
@@ -16,8 +16,7 @@ Rodrigo Zepeda-Tello 1| Michael Schomaker 2,3| Aurelien Belot 4| Camille Maringe
 4. ICON-group. Non-communicable Disease Epidemiology. London School of Hygiene and Tropical Medicine. London, U.K.
 5. Faculty of Pharmacy and Department of Social and Preventive Medicine, University of Montreal, Montreal, Canada.
 6. Department of Epidemiology, Biostatistics and Occupational Health, McGill University, Montreal, Canada.
-7. Non-communicable Disease and Cancer Epidemiology Group, Instuto Biosanitario de Granada (ibs.GRANADA), Andalusian School of Public Health, University o fGranada, Granada, Spain.
-8. Biomedical Network Research Centers of Epidemiology and Public Health(CIBERESP), Madrid, Spain.
+7. Department of Statistics and Operational Research, University of Granada, Granada, Spain.
 
 Correspondence* Miguel Angel Luque-Fernandez, Email: miguel-angel.luque@lshtm.ac.uk  
 

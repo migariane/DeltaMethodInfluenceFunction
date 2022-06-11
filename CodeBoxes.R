@@ -1,7 +1,7 @@
 # The Delta-method and influence function in epidemiology: a reproducible tutorial
 
 # Authors
-# Rodrigo Zepeda-Tello 1| Michael Schomaker 2,3| Aurelien Belot 4| Camille Maringe 4| Mathew Smith 4| Bernard Rachet 4| Mireille E.Schnitzer 5,6| Miguel Angel Luque Fernandez*4,7,8
+# Rodrigo Zepeda-Tello 1| Michael Schomaker 2,3| Aurelien Belot 4| Camille Maringe 4| Mathew Smith 4| Bernard Rachet 4| Mireille E.Schnitzer 5,6| Miguel Angel Luque Fernandez*4,7
 
 # Affiliations 
 #1. Instituto Mexicano del Seguro Social, Mexico.
@@ -10,13 +10,12 @@
 #4. ICON-group. Non-communicable Disease Epidemiology. London School of Hygiene and Tropical Medicine. London, U.K.
 #5. Faculty of Pharmacy and Department of Social and Preventive Medicine, University of Montreal, Montreal, Canada.
 #6. Department of Epidemiology, Biostatistics and Occupational Health, McGill University, Montreal, Canada.
-#7. Non-communicable Disease and Cancer Epidemiology Group, Instuto Biosanitario de Granada (ibs.GRANADA), Andalusian School of Public Health, University o fGranada, Granada, Spain.
-#8. Biomedical Network Research Centers of Epidemiology and Public Health(CIBERESP), Madrid, Spain.
+#7. Department of Statistics and Operational Research, University of Granada, Granada, Spain.
 
 #Correspondence* Miguel Angel Luque-Fernandez, Email: miguel-angel.luque@lshtm.ac.uk  
 
 #################################################
-## BOX ONE: Sample mean (classial Delta-Method)
+## BOX ONE: Sample mean (classical Delta-Method)
 #################################################
 
 set.seed(7777)
@@ -62,36 +61,9 @@ par(mar= c(5, 5, 2, 2))
 plot(y, IF, cex.axis=1.75,cex.lab=1.75,cex=2,xlim=c(0,1),ylim=c(-0.5,0.5),xlab="Y",ylab="Influence Function",type="l")
 dev.off()
 
-######################################################################
-## BOX TWO: Sample mean seen as functional (Functional Delta-method)
-######################################################################
-
-# Data generation
-set.seed(7777)
-library(kdensity)
-library(EnvStats)
-n           <- 1000
-y           <- rnorm(n,50)
-my_p        <- 0.25 #Change as you see fit
-
-#Compute the first quartile 
-empirical_quantile <- quantile(y, my_p); empirical_quantile
-f_hat              <- kdensity(y, kernel = "epanechnikov", normalized = F)
-plot(f_hat, main = "Estimated density f() of data")
-
-# IF based 95%CI for Y 
-var_IF  <- my_p*(1 - my_p)/(f_hat(empirical_quantile)^2)
-SEy_IF  <- sqrt(var_IF/n)
-CI      <- c(empirical_quantile - qnorm(0.975)*SEy_IF, empirical_quantile + qnorm(0.975)*SEy_IF); CI
-
-# Check results binomial and asymptotically based 95%CI 
-eqnpar(x=y, p=my_p, ci=TRUE, ci.method="exact",approx.conf.level=0.95)$interval$limits
-
-eqnpar(x=y, p=my_p, ci=TRUE, ci.method="normal.approx",approx.conf.level=0.95)$interval$limits
-
-##############################
-## BOX THREE: ratio two means
-#############################
+#################################
+## BOX TWO: ratio of two means
+#################################
 
 # Data generation
 library(mvtnorm)
@@ -134,12 +106,12 @@ CI.Delta = function(theta1, sd1,
     names(res) = c('R','L','U')
     return(res)
 }
-# END CI Delta met
+# 95%CI Delta-method
 CI.Delta(theta1, sd1, theta2, sd2, 0.95)
 
-####################################
-## BOX FOUR: ratio two proportions
-####################################
+########################################
+## BOX THREE: ratio of two proportions
+########################################
 
 install.packages("epitools")
 library(epitools)
@@ -160,9 +132,44 @@ SE <- sqrt(var.IF); SE
 CI = c(log(ratio)-qnorm(.975)*SE,log(ratio)+qnorm(.975)*SE); ratio; exp(CI)
 # 1.124081 2.001634
 
-#########################################
+######################################################################
+## BOX FOUR: Delta-method to derive the SE for the quantile function
+######################################################################
+
+# Data generation
+set.seed(7777)
+library(kdensity)
+library(EnvStats)
+n           <- 1000
+y           <- rnorm(n,50)
+my_p        <- 0.25 #Change as you see fit
+
+#Compute the first quartile 
+empirical_quantile <- quantile(y, my_p); 
+f_hat              <- kdensity(y, kernel = "epanechnikov", normalized = F)
+plot(f_hat, main = "Estimated density f() of data")
+
+# IF based 95%CI for Y 
+var_IF  <- my_p*(1 - my_p)/(f_hat(empirical_quantile)^2)
+SEy_IF  <- sqrt(var_IF/n)
+CI      <- c(empirical_quantile - qnorm(0.975)*SEy_IF, empirical_quantile + qnorm(0.975)*SEy_IF); CI
+
+## 25%      95%
+## 49.28908 49.46078 
+
+# Check results binomial and asymptotically based 95%CI 
+eqnpar(x=y, p=my_p, ci=TRUE, ci.method="exact",approx.conf.level=0.95)$interval$limits
+
+##     LCL      UCL 
+## 49.26460 49.45987 
+
+eqnpar(x=y, p=my_p, ci=TRUE, ci.method="normal.approx",approx.conf.level=0.95)$interval$limits
+##     LCL      UCL 
+## 49.26406 49.45863 
+
+###########################################
 ## BOX FIVE: CORRELATION BETWEEN X AND Y
-#########################################
+###########################################
 
 # Delta-method for the SE of the correlation between two vectors X and Y based on the IF.
 #install.packages("MASS")
