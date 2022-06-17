@@ -16,7 +16,7 @@ Rodrigo Zepeda-Tello 1| Michael Schomaker 2,3| Aurelien Belot 4| Camille Maringe
 4. ICON-group. Non-communicable Disease Epidemiology. London School of Hygiene and Tropical Medicine. London, U.K.
 5. Faculty of Pharmacy and Department of Social and Preventive Medicine, University of Montreal, Montreal, Canada.
 6. Department of Epidemiology, Biostatistics and Occupational Health, McGill University, Montreal, Canada.
-7. Department of Statistics and Operational Research, University of Granada, Granada, Spain.
+7. Department of Statistics and Operations Research, University of Granada, Granada, Spain.
 
 Correspondence* Miguel Angel Luque-Fernandez, Email: miguel-angel.luque@lshtm.ac.uk  
 
