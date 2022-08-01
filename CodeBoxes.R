@@ -81,18 +81,16 @@ c <-    2 * ((mean(X)) / (mean(Y))^3) * cov(X,Y)
 var.IF <- 1/n *(a+b-c); var.IF
 SE <- sqrt(var.IF); SE
 CI = c(mean(ratio)-qnorm(0.975)*SE,mean(ratio)+qnorm(0.975)*SE); mean(ratio); CI
-# Cheking results
-# CI Delta method
+# Comparing results with Fieller's method
+# 95% CI: Fieller's method
 theta1 <- mean(X)
 sd1 <- sd(X)
 theta2 <- mean(Y)
 sd2 <- sd(Y)
-CI.Delta = function(theta1, sd1,
+CI.Fieller = function(theta1, sd1,
                     theta2, sd2,# estimate and estimated sd of estimator
-                    alpha # theoretical coverage (1-alpha)
-)
+                    alpha) # theoretical coverage (1-alpha)
 {
-    ## CI Delta method
     ## Hirschberg, J., and J. Lye. 2010.
     ## “A Geometric Comparison of the Delta and Fieller Confidence Intervals.”
     ## The American Statistician 64 (3): 234–41, Eq. 3-6
