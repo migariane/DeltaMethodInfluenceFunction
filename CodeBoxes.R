@@ -104,8 +104,8 @@ CI.Fieller = function(theta1, sd1,
     names(res) = c('R','L','U')
     return(res)
 }
-# 95%CI Delta-method
-CI.Delta(theta1, sd1, theta2, sd2, 0.95)
+# 95%CI Fieller's method
+CI.Fieller(theta1, sd1, theta2, sd2, 0.95)
 
 ########################################
 ## BOX THREE: ratio of two proportions
